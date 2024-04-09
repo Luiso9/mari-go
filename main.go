@@ -14,12 +14,17 @@ import (
 )
 
 func main() {
-	config, err := config.LoadConfig()
+	err := config.LoadConfig()
 	if err != nil {
-		fmt.Println("Terjadi error pada loadConfig", err)
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	sess, err := discordgo.New("Bot " + config.Token)
+	conf := config.GetConfig()
+	if conf.Token == "" {
+		log.Fatal("Token is missing in configuration")
+	}
+
+	sess, err := discordgo.New("Bot " + conf.Token)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,12 +34,11 @@ func main() {
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 	err = sess.Open()
 	if err != nil {
-		fmt.Println("Error opening connection:", err)
+		log.Fatalf("Error opening connection: %v", err)
 	}
 	defer sess.Close()
 
-	fmt.Println("Online~")
-
+	fmt.Println("Bot is now running. Press CTRL+C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
