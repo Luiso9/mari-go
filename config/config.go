@@ -1,49 +1,36 @@
 package config
 
 import (
- "encoding/json"
- "fmt"
- "os"
-)
-
-var (
- Token     string
- BotPrefix string
-
- config *Config
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
 )
 
 type Config struct {
- Token     string `json:"token"`
- BotPrefix string `json:"botPrefix"`
+    Token string `json:"token"` 
+    Prefix string `json:"prefix"`
 }
 
-// ReadConfig reads the config.json file and unmarshals it into the Config struct
-func ReadConfig() error {
+func LoadConfig() (Config, error) {
+    // Read the config file
+    configFile, err := os.Open("config.json")
+    if err != nil {
+        return Config{}, fmt.Errorf("error opening config.json: %v", err)
+    }
+    defer configFile.Close()
 
- fmt.Println("Reading config.json...")
- file, err := os.ReadFile("./config.json")
+    jsonBytes, err := ioutil.ReadAll(configFile)
+    if err != nil {
+        return Config{}, fmt.Errorf("error reading config.json: %v", err)
+    }
 
- if err != nil {
-  return err
- }
+    // Parse JSON into the Config struct
+    var config Config
+    err = json.Unmarshal(jsonBytes, &config)
+    if err != nil {
+        return Config{}, fmt.Errorf("error parsing config.json: %v", err)
+    }
 
- fmt.Println("Unmarshalling config.json...")
-
- // unmarshall file into config struct
- err = json.Unmarshal(file, &config)
-
- if err != nil {
-  fmt.Println("Error unmarshalling config.json")
-  return err
- }
-
- Token = config.Token
- BotPrefix = config.BotPrefix
-
- Token = config.Token
- BotPrefix = config.BotPrefix
-
- return nil
-
+    return config, nil
 }
